@@ -168,7 +168,7 @@ class DQN(object):
         return reward
     
 
-dqn_init = 1
+dqn_init = 0
 if(dqn_init):
     dqn = DQN() # init 
     EPSILON = 0.9
@@ -257,7 +257,8 @@ while(1):
         # if(abs(x)<0.1):  # 必须对x有要求。
             if(step>2**16):
             
-                with open('./model/cart_pole/'+str(x)+'.pkl', "wb") as f:
+                # with open('./model/cart_pole/'+str(x)+'.pkl', "wb") as f:
+                with open('./model/cart_pole/'+str('a')+'.pkl', "wb") as f:
                     pickle.dump(dqn, f)
                 print('ep:',i_episode,'step',step,state)
                 print('\a')

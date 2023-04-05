@@ -35,8 +35,8 @@ MEMORY_CAPACITY = 2000
 # render_on = 1
 
 
-env = gym.make('CartPole-v1', render_mode="human")
-# env = gym.make('CartPole-v1')
+# env = gym.make('CartPole-v1', render_mode="human")
+env = gym.make('CartPole-v1')
 env = env.unwrapped
 N_ACTIONS = env.action_space.n
 N_STATES = env.observation_space.shape[0]
@@ -173,6 +173,7 @@ while(1):
         
 
         x,xd,th,thd = state
+
         # if(step%2**3==0):
             # if(x<2.4):
             # action = 1
@@ -184,12 +185,12 @@ while(1):
 
         if(plt_on ==1):
         
-            if(step%2**6==0):
-            # if(step%2**16==0):
+            # if(step%2**6==0):
+            if(step%2**16==0):
                 # print(step,state,next_state)
                 
                 t_list.append(step)
-                x_list.append(x)
+                x_list.append(abs(x))
                 xd_list.append(xd)
                 th_list.append(th)
                 thd_list.append(thd)
@@ -199,6 +200,11 @@ while(1):
                 # plt.plot(t_list,th_list,c='green')
                 # plt.plot(t_list,thd_list,c='blue')
                 plt.pause(0.1)
+                
+                if(abs(x)>0.5):
+                    print('\a')
+                    print('小车偏离太远')
+                    exit()
 
         # print(step,next_state)
             
