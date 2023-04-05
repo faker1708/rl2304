@@ -1,0 +1,8 @@
+
+pip install torch
+
+pip install numpy
+
+pip install gym
+
+pip install gym[classic_control]
