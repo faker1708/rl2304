@@ -168,7 +168,7 @@ class DQN(object):
         return reward
     
 
-dqn_init = 0
+dqn_init = 1
 if(dqn_init):
     dqn = DQN() # init 
     EPSILON = 0.9
