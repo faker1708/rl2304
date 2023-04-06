@@ -22,7 +22,7 @@ class dqn(object):
         self.assistant_net = copy.deepcopy(self.protagonist_net)
 
         self.sync_step = 0
-        self.epsilon = 0.2
+        self.epsilon = 0.9
         # self.epsilon = 1
 
     def action_f(self,state):
@@ -38,7 +38,6 @@ class dqn(object):
             if(xxe<xxd):
                 fc = 1
             else:
-                # print('探索')
                 fc = 0
 
 
@@ -46,28 +45,17 @@ class dqn(object):
             x = torch.from_numpy(state).cuda()
             x = torch.unsqueeze(x, dim=1)
             y = self.protagonist_net.test(x)
-            # # print('action_f y',y)
-
-            if(y.sum()==0):
-                # print('we')
-                # print(x)
-                # exit()
-                pass
-            else:
-                # print('y',y)
-                pass
 
             action = int(y.argmax().cpu())
-            # # print(y.argmax())
+            # print(y.argmax())
             # print(action)
 
 
-            # # print('y',y)
-            # # print('x',x)
+            # print('y',y)
+            # print('x',x)
             # action = int(y.cpu())
         else:
             action = self.random_action()
-        # print('ex_action',action)
 
         return action
     def random_action(self):
@@ -84,7 +72,7 @@ class dqn(object):
         
         smp = self.memory_pointer
 
-        # # print(smp,self.capacity)
+        # print(smp,self.capacity)
 
         if(smp>=self.capacity):smp = 0
         self.memory[smp]=packet
@@ -114,8 +102,8 @@ class dqn(object):
         batch_action = torch.tensor([]).cuda()
         batch_next_state = torch.tensor([]).cuda()
         batch_reward = torch.tensor([]).cuda()
-        # # print(batch)
-        # # print(len(batch))
+        # print(batch)
+        # print(len(batch))
         for i,ele in enumerate(batch):
             if(ele):
                 state = ele[0]
@@ -125,21 +113,21 @@ class dqn(object):
                 
                 action = ele[1]
                 tt = torch.tensor(action).reshape([1]).cuda()
-                # # print(tt)
+                # print(tt)
                 tt = torch.unsqueeze(tt, dim=1)
                 batch_action = torch.cat((batch_action,tt),1)
 
                 # next_state = ele[2]
                 # tt = torch.from_numpy(next_state)
-                # # print(tt)
+                # print(tt)
                 # tt = torch.unsqueeze(tt, dim=1)
                 # batch_next_state = torch.cat((batch_action,tt),1)
 
                 
                 next_state = ele[2]
-                # # print(next_state)
+                # print(next_state)
                 next_state = torch.from_numpy(next_state).cuda()
-                # # print('next_state',next_state)
+                # print('next_state',next_state)
                 next_state = torch.unsqueeze(next_state, dim=1)
                 batch_next_state = torch.cat((batch_next_state,next_state),1)
 
@@ -151,9 +139,9 @@ class dqn(object):
                 batch_reward = torch.cat((batch_reward,tt),1)
 
 
-        # # print(batch_state)
-        # # print(batch_action)
-        # # print(batch_next_state)
+        # print(batch_state)
+        # print(batch_action)
+        # print(batch_next_state)
         # batch_state = torch.tensor(sl)
         return batch_state,batch_action,batch_next_state,batch_reward
 
@@ -171,46 +159,43 @@ class dqn(object):
                 # pass
                 return
         
-        # # print(batch)
+        # print('可以学习了')
+        # exit()
 
-        beta = 0.5  # 即延系数
+        # print(batch)
+
+        beta = 0.9  # 即延系数
+        alpha = 0.9 # 先后系数
+        alpha = 1
+
+        # 现在要把列表转成tensor 来批量运算。
+        
 
         batch_state,batch_action,batch_next_state,batch_reward  = self.get_batch(batch)
 
+        # print(batch_next_state)
+
         instant_gratification = batch_reward
-        deferred_gratification = self.assistant_net.test(batch_next_state).gather(0, batch_action.long()) # 只计算，不反向传播
+        deferred_gratification = self.assistant_net.test(batch_next_state) # 只计算，不反向传播
+
+        # print('deferred_gratification',deferred_gratification)
 
         total_reward = (1-beta) * instant_gratification + beta* deferred_gratification
         
+        
         posterior_reward = total_reward
-         
+        priori_reward = self.protagonist_net.forward(batch_state) #需要反向传播
+        ideal = (1-alpha)*priori_reward + alpha* posterior_reward
 
 
-        net_out = self.protagonist_net.forward(batch_state)
-        # print(net_out)
-        # if(net_out.sum()==0):
-        #     print('w_list')
-        #     print(self.protagonist_net.param['w_list'])
-        #     print('b_list')
-        #     print(self.protagonist_net.param['b_list'])
-        #     print(batch_state)
 
-        #     yy = self.protagonist_net.test(batch_state)
-        #     print(yy)
-
-        #     exit()
-
-        priori_reward = net_out.gather(0, batch_action.long()) #需要反向传播
-        
-        ideal = posterior_reward
         loss = self.protagonist_net.loss_f(priori_reward,ideal)
-        
-        batch_size = self.batch_size
-        # loss = loss/batch_size
         loss.backward()
         self.protagonist_net.update()
 
         fl = float(loss)
+        print(fl)
+
 
 
         # 主从网络同步

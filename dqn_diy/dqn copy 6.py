@@ -22,7 +22,7 @@ class dqn(object):
         self.assistant_net = copy.deepcopy(self.protagonist_net)
 
         self.sync_step = 0
-        self.epsilon = 0.2
+        self.epsilon = 0.9
         # self.epsilon = 1
 
     def action_f(self,state):
@@ -38,7 +38,6 @@ class dqn(object):
             if(xxe<xxd):
                 fc = 1
             else:
-                # print('探索')
                 fc = 0
 
 
@@ -48,18 +47,9 @@ class dqn(object):
             y = self.protagonist_net.test(x)
             # # print('action_f y',y)
 
-            if(y.sum()==0):
-                # print('we')
-                # print(x)
-                # exit()
-                pass
-            else:
-                # print('y',y)
-                pass
-
             action = int(y.argmax().cpu())
             # # print(y.argmax())
-            # print(action)
+            # # print(action)
 
 
             # # print('y',y)
@@ -67,7 +57,6 @@ class dqn(object):
             # action = int(y.cpu())
         else:
             action = self.random_action()
-        # print('ex_action',action)
 
         return action
     def random_action(self):
@@ -173,7 +162,10 @@ class dqn(object):
         
         # # print(batch)
 
-        beta = 0.5  # 即延系数
+        beta = 0.9  # 即延系数
+        alpha = 0.9 # 先后系数
+
+        
 
         batch_state,batch_action,batch_next_state,batch_reward  = self.get_batch(batch)
 
@@ -187,26 +179,15 @@ class dqn(object):
 
 
         net_out = self.protagonist_net.forward(batch_state)
-        # print(net_out)
-        # if(net_out.sum()==0):
-        #     print('w_list')
-        #     print(self.protagonist_net.param['w_list'])
-        #     print('b_list')
-        #     print(self.protagonist_net.param['b_list'])
-        #     print(batch_state)
 
-        #     yy = self.protagonist_net.test(batch_state)
-        #     print(yy)
-
-        #     exit()
 
         priori_reward = net_out.gather(0, batch_action.long()) #需要反向传播
         
-        ideal = posterior_reward
+        ideal = (1-alpha)*priori_reward + alpha* posterior_reward
         loss = self.protagonist_net.loss_f(priori_reward,ideal)
         
         batch_size = self.batch_size
-        # loss = loss/batch_size
+        loss/batch_size
         loss.backward()
         self.protagonist_net.update()
 
