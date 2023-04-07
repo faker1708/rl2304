@@ -71,15 +71,25 @@ class DQN(object):
 
     def choose_action(self, x):
         x = torch.unsqueeze(torch.FloatTensor(x), 0)
+
+        # print(x.dtype)
+        # print('x',x)
+        # print('x.s',x.shape)
         # input only one sample
         if np.random.uniform() < EPSILON:   # greedy
         # if True:
             actions_value = self.eval_net.forward(x)
+
+            # print(actions_value)
+            # exit()
+
             action = torch.max(actions_value, 1)[1].data.numpy()
             action = action[0] if ENV_A_SHAPE == 0 else action.reshape(ENV_A_SHAPE)  # return the argmax index
         else:   # random
             action = np.random.randint(0, N_ACTIONS)
             action = action if ENV_A_SHAPE == 0 else action.reshape(ENV_A_SHAPE)
+
+
         return action
 
     def store_transition(self, state, a, r, s_):
@@ -104,6 +114,9 @@ class DQN(object):
         b_a = torch.LongTensor(b_memory[:, N_STATES:N_STATES+1].astype(int))
         b_r = torch.FloatTensor(b_memory[:, N_STATES+1:N_STATES+2])
         b_s_ = torch.FloatTensor(b_memory[:, -N_STATES:])
+
+        print(b_s)
+        exit()
 
         # q_eval w.r.t the action in experience
         q_eval = self.eval_net(b_s).gather(1, b_a)  # shape (batch, 1)
@@ -168,7 +181,7 @@ class DQN(object):
         return reward
     
 
-dqn_init = 0
+dqn_init = 1
 if(dqn_init):
     dqn = DQN() # init 
     EPSILON = 0.9
